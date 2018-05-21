@@ -1,0 +1,59 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=20mm,
+ top=20mm,
+ }
+
+\begin{document}
+\section{Struktury danych}
+\begin{itemize}
+\item{$id$ - numer id procesu}
+\item{$n$ - liczba menadżerów}
+\item{$s$ - liczba miejsc w salonie}
+\item{$l$ - liczba lekarzy}
+\item{$m_i$ - liczba modelek procesu $i$-tego}
+\item {$shift_l$ - przesuniecie numeru lekarza względem początku $kol_{lek}$}
+\item{$clock_{lek}$ - oznacza chwilę w której dany menadżer ubiega się o lekarza}
+\item{$kol_{lek}$ - kolejka procesów ubiegającch się o dostęp do lekarza posortowana z użyciem pary $(clock_{rec}, id_{proc})$}
+\item $clock_{sal}$ - oznacza chwilę w które dany menadżer ubiega się o dostęp do salonu
+\item{$kol_{sal}$ - kolejka procesów ubiegających się o dostęp do salonu posortowana z użyciem $(clock_{rec}, id_{proc})$}
+\item{$l_{lek}$ - lista $id_{proc}$ oznaczająca otrzymaną akceptację dostępu do lekarza od procesu}
+\item{$l_{sal}$ - lista $id_{proc}$ oznaczająca otrzymaną akceptację dostępu do salonu od procesu}
+\item{$clock$} - wektor zegarów logicznych procesów
+\item{$count_{s}$ - liczba dostępnych miejsc w salonie}
+\end{itemize}
+\section{Rodzaje komunikatów}
+\paragraph{Każdy komunikat zawiera $rec_{id}$ - numer procesu oraz zawiera zmienną $clock_{rec}$ będącą zegarem logicznym}
+\begin{itemize}
+\item{$ACK_{lek}$}
+\item{$REQ_{lek}$}
+\item{$ACK_{sal}$ - zawiera $m_{rec}$ - liczba modelek zwolniona przez $id_{proc}$-ty proces}
+\item{$REQ_{sal}$ - zawiera $m_{rec}$ - liczba modelek dla procesu $j-tego$}
+\end{itemize}
+\section{Algorytm}
+\subsection{Odbiór wiadomości}
+\paragraph{$clock_{i} = \max{(clock_i, clock_{rec})} + 1$, $clock_{rec_{id}} = clock_{rec}$, jeżeli wiadomość typu:}
+\begin{itemize}
+\item {$ACK_{lek}$ - Jeżeli para z $kol_{lek}$ dla której $id_{proc} = rec_{id}$ poprzedza parę $(clock_{lek}, id)$ to $shift += 1$. Usuń tę parę z $kol_{lek}$, dodaj $rec_{id}$ do $l_{lek}$}
+\item {$REQ_{lek}$ - Dodaj parę $(clock_{rec}, rec_{id})$ do $kol_{lek}$}. 
+\item {$ACK_{sal}$ - $count_s$ zwiększ o $m_{rec}$}
+\item {$REQ_{sal}$ - Jeżeli nie istnieje taka para $(clock_{sal}, id) \in kol_{sal}$. Wyślij wiadomość typu $ACK_{sal}$ do procesu $rec_{id}$, gdzie $m_{rec} = 0$. W przeciwnym wypadku jeżeli para z $kol_{sal}$ dla której $id_{proc} = rec_{id}$ poprzedza parę $(clock_{sal}, id)$ to $count_{s}$ zmniejsz o $m_{rec}$, w przeciwnym wypadku dodaj $id_{proc}$ do $l_{sal}$.}
+\end{itemize}
+\subsection{Pseudokod}
+\begin{enumerate}
+\item $count_{s} = s$, $clock_{i} = 0$, losuj $m_{i}$ $cout_{acklek} = 0$, $count_{acksal} = 0$
+\item Odbiór wiadomości. Inkrementuj $clock_i$. Wyślij wiadomość typu $REQ_{lek}$ z $clock_{rec} = clock_i$, dodaj parę $(clock_{i}, id_{proc})$ do $kol_{lek}$ oraz $clock_{lek} = clock_i$.
+\item Obierz wiadomości. Jeżeli $kol_{lek}.size() + l_{lek}.size() = n$ oraz $l > nr$ oraz $shift_l = l$ oraz gdzie $nr$ jest numerem pozycji procesu w $kol_{lek}$. Skorzystaj z lekarza o numerze równym $nr$ gdzie $nr$ jest pozycją procesu w $kol_{lek}$, $shift_l := 0$. W przeciwnym wypadku GOTO 3.
+\item Wyślij wiadomość $ACK_{lek}$ do każdego procesu.
+\item Odbierz wiadomości. Inkrementuj $clock_i$. Wyślij wiadomość typu $REQ_{sal}$ gdzie $m_{rec} = m_i$. Dodaj parę $(clock_i, id)$ do $kol_{sal}$.
+\item Odbierz wiadomości. Jeżeli dla każdego $id_{proc} \not\in kol_{sal}, id_{proc} \not\in l_{sal}$ $clock_{id_{proc}} > clock_{id}$ oraz $count_{s} >= m_{i}$ GOTO 7. W przeciwnym wypadku powtórz krok.
+\item Zaprowadź modelki do salonu. Po powrocie modelek wyślij wiadomość typu $ACK_{sal}$ z $m_{rec} = m_i$ do każdego procesu.
+\item Odbierz wiadomości. Jeżeli $l_{sal}.size() = n$ Odbywa się konkurs i GOTO 1. W przeciwnym wypadku powtórz krok.
+\end{enumerate}
+\end{document}
