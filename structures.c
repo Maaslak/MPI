@@ -4,14 +4,17 @@
 #include "structures.h"
 
 
-lekstruct initLekStruct(int size){
+lekstruct initLekStruct(int size, int l){
     lekstruct lek;
     lek.acklek = malloc(size * sizeof(bool));
+    for(int i = 0; i < size; i++)
+        lek.acklek[i] = false;
     lek.kollek = malloc(size * sizeof(msg_lek_type));
     lek.count_ack_lek = 0;
-    lek.clock_lek = 0;
+    lek.clock_lek = 1000000;
     lek.shift = 0;
     lek.count_req_lek = 0;
+    lek.l = l;
     return lek;
 }
 
@@ -20,12 +23,15 @@ void freeSalStruct(salstruct* sal){
     free(sal->kolsal);
 }
 
-salstruct initSalStruct(int size){
+salstruct initSalStruct(int size, int m, int s){
     salstruct sal;
     sal.acksal = malloc(size * sizeof(bool));
     sal.kolsal = malloc(size * sizeof(msg_sal_type));
     sal.count_req_sal = 0;
     sal.count_ack_sal = 0;
+    sal.count_s = s;
+    sal.m = m;
+    sal.start = false;
     return sal;
 }
 
