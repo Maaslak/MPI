@@ -37,6 +37,7 @@ typedef struct sal_type{
     int m, s;
     int count_s;
     int count_req_sal, clock_sal, count_ack_sal;
+    int final_countdown;
     msg_type* kolsal; //kolejka do salonu
     bool* acksal;
 }salstruct;

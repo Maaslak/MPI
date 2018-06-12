@@ -27,8 +27,11 @@ salstruct initSalStruct(int size, int m, int s){
     salstruct sal;
     sal.acksal = malloc(size * sizeof(bool));
     sal.kolsal = malloc(size * sizeof(msg_type));
+    for(int i = 0; i < size; i++)
+        sal.acksal[i] = false;
     sal.count_req_sal = 0;
     sal.count_ack_sal = 0;
+    sal.final_countdown = size -1;
     sal.clock_sal = 100000;
     sal.count_s = s;
     sal.m = m;

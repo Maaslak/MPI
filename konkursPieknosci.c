@@ -80,7 +80,7 @@ int main(int argc, char **argv)
 	sleep(0.005);
 	send_ack_sal(clock_vec, size, tid, mpi_type, &sal);
 
-	while(sal.count_ack_sal != size-1){
+	while(sal.final_countdown != 0){
 		recv_all(clock_vec, size, tid, mpi_type, &lek, &sal, &comm, false);
 	}
 	printf("\"Rozpoczynamy konkurs\" - krzyczy menadżer %d\n", tid);
@@ -132,7 +132,9 @@ int recv_all(int *clock_vec, int size, int my_tid, MPI_Datatype mpi_type, lekstr
 							sal->kolsal[com->status.MPI_SOURCE] = com->buffer;
 							if(com->buffer.clock_rec > sal->clock_sal || (com->buffer.clock_rec == sal->clock_sal && com->status.MPI_SOURCE > my_tid)){
 								//if(!sal->acksal[com->status.MPI_SOURCE])
-								sal->count_ack_sal++;
+								if(!sal->acksal[com->status.MPI_SOURCE]) {
+									sal->count_ack_sal++;
+								}
 								sal->acksal[com->status.MPI_SOURCE] = true;
 							}
 							else{
@@ -159,6 +161,7 @@ int recv_all(int *clock_vec, int size, int my_tid, MPI_Datatype mpi_type, lekstr
         					break;*/
 			case ACK_SAL:	//if(com->buffer.clock_rec > sal->clock_sal || (com->buffer.clock_rec == sal->clock_sal && com->status.MPI_SOURCE > my_tid))
 							sal->count_s += com->buffer.m_rec;
+							sal->final_countdown--;
 							//printf("%d\n",sal->count_s);
 							if(!sal->acksal[com->status.MPI_SOURCE]) {
 								sal->count_ack_sal++;
