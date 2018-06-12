@@ -65,8 +65,8 @@ int main(int argc, char **argv)
 	while(lek.count_ack_lek + lek.count_req_lek != size-1 || lek.count_req_lek >= l || lek.shift != 0){
         recv_all(clock_vec, size, tid, mpi_lek_type, &lek, &sal, &comm, false);
 	}
-	//printf("sum: %d count_req_lek: %d l: %d Zajęty lekarz nr %d przez proces %d\n",lek.count_ack_lek + lek.count_req_lek, lek.count_req_lek, lek.l, lek.count_req_lek, tid);
-	printf("Zajęty lekarz nr %d przez proces %d\n",lek.count_req_lek, tid);
+	printf("sum: %d count_req_lek: %d clock_lek: %d count_acklek: %d Zajęty lekarz nr %d przez proces %d\n",lek.count_ack_lek + lek.count_req_lek, lek.count_req_lek, lek.clock_lek, lek.count_ack_lek, lek.count_req_lek, tid);
+	//printf("Zajęty lekarz nr %d przez proces %d\n",lek.count_req_lek, tid);
 	sleep(1);
     send_ack_lek(clock_vec, size, tid, mpi_lek_type, &lek);
 	printf("Zwolniony lekarz nr %d\n", lek.count_req_lek);
@@ -104,7 +104,7 @@ int recv_all(int *clock_vec, int size, int my_tid, MPI_Datatype mpi_lek_type, le
             case REQ_LEK:   //printf("Odebral %d od %d REQ_LEK clock: %d\n", my_tid, com->buffer.rec_id, clock_vec[my_tid]);
                             lek->kollek[com->buffer.rec_id] = com->buffer;
                             if (com->buffer.clock_rec > lek->clock_lek || (com->buffer.clock_rec == lek->clock_lek && com->buffer.rec_id > my_tid)) {
-                            	//printf("moje: %d %d, jego %d %d\n", lek->clock_lek, my_tid, com->buffer.clock_rec, com->buffer.rec_id);
+                            	printf("moje: %d %d, jego %d %d\n", lek->clock_lek, my_tid, com->buffer.clock_rec, com->buffer.rec_id);
 								(lek->count_ack_lek)++;
                                 lek->acklek[com->buffer.rec_id] = true;
                             } else
