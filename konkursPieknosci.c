@@ -60,7 +60,7 @@ int main(int argc, char **argv)
         recv_all(clock_vec, size, tid, mpi_type, &lek, &sal, &comm, false);
 	}
 	//printf("sum: %d count_req_lek: %d clock_lek: %d count_acklek: %d Zajęty lekarz nr %d przez proces %d\n",lek.count_ack_lek + lek.count_req_lek, lek.count_req_lek, lek.clock_lek, lek.count_ack_lek, lek.count_req_lek, tid);
-	printf("Zajęty lekarz nr %d przez proces %d\n",lek.count_req_lek, tid);
+	printf("Zajęty lekarz nr %d przez menadżera %d\n",lek.count_req_lek, tid);
 	sleep(1);
     printf("Zwolniony lekarz nr %d\n", lek.count_req_lek);
 	fflush(stdout);
@@ -73,12 +73,17 @@ int main(int argc, char **argv)
 	while(sal.count_ack_sal + sal.count_req_sal != size - 1 || sal.count_s < sal.m){
 		recv_all(clock_vec, size, tid, mpi_type, &lek, &sal, &comm, false);
 	}
-	printf("Zajęto %d miejsc w salonie przez proces %d ilosc wolnych miejsc: %d\n", sal.m, tid, sal.count_s - sal.m);
+	printf("Zajęto %d miejsc w salonie przez menadżera %d ilosc wolnych miejsc: %d\n", sal.m, tid, sal.count_s - sal.m);
 	sleep(1);
-	printf("Zwolniono %d miejsc w salonie przez proces %d\n", sal.m, tid);
+	printf("Zwolniono %d miejsc w salonie przez menadżera %d\n", sal.m, tid);
 	fflush(stdout);
 	sleep(0.005);
 	send_ack_sal(clock_vec, size, tid, mpi_type, &sal);
+
+	while(sal.count_ack_sal != size-1){
+		recv_all(clock_vec, size, tid, mpi_type, &lek, &sal, &comm, false);
+	}
+	printf("\"Rozpoczynamy konkurs\" - krzyczy menadżer %d\n", tid);
 
 	freeLekStruct(&lek);
 	freeSalStruct(&sal);
@@ -155,9 +160,11 @@ int recv_all(int *clock_vec, int size, int my_tid, MPI_Datatype mpi_type, lekstr
 			case ACK_SAL:	//if(com->buffer.clock_rec > sal->clock_sal || (com->buffer.clock_rec == sal->clock_sal && com->status.MPI_SOURCE > my_tid))
 							sal->count_s += com->buffer.m_rec;
 							//printf("%d\n",sal->count_s);
+							if(!sal->acksal[com->status.MPI_SOURCE]) {
+								sal->count_ack_sal++;
+								sal->count_req_sal--;
+							}
 							sal->acksal[com->status.MPI_SOURCE] = true;
-							sal->count_ack_sal++;
-							sal->count_req_sal--;
 							break;
         }
 		MPI_Irecv(&(com->buffer), 1, mpi_type, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &(com->req));
